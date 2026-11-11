@@ -1,0 +1,7 @@
+.venv
+__pycache__
+tests/__pycache__
+career_guide.db
+career_guide.db.*
+.careercompass_secret
+*.zip

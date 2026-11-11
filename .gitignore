@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+career_guide.db
+career_guide.db.*
+.env
+.careercompass_secret
+.vercel/
+
