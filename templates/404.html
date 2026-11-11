@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found | CareerCompass{% endblock %}
+{% block content %}<section class="py-5"><div class="container py-5 text-center"><div class="empty-state"><i class="bi bi-signpost-split"></i><h1 class="display-5 fw-bold">That path does not exist.</h1><p>Return to the homepage and continue exploring.</p><a href="{{ url_for('home') }}" class="btn btn-primary">Back home</a></div></div></section>{% endblock %}

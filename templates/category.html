@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ category.label }} | CareerCompass{% endblock %}
+{% block content %}
+<section class="page-hero py-5"><div class="container py-4"><div class="d-flex align-items-center gap-3"><div class="page-hero-icon"><i class="bi {{ category.icon }}"></i></div><div><span class="eyebrow light">Career dimension</span><h1 class="display-5 fw-bold mt-2">{{ category.label }}</h1><p class="lead mb-0">{{ category.description }}</p></div></div></div></section>
+<section class="py-5"><div class="container">
+    {% set sections = [('course', 'Courses to explore', courses), ('career', 'Career possibilities', careers), ('skill', 'Skills to develop', skills), ('technology', 'Useful technologies', technologies)] %}
+    {% for kind, heading, items in sections %}
+    <div class="catalog-section {% if not loop.first %}mt-5{% endif %}">
+        <span class="card-kicker">{{ kind }}</span><h2 class="h3 mb-4">{{ heading }}</h2>
+        <div class="row g-3">
+            {% for item in items %}
+            <div class="col-md-6 col-lg-4">
+                <button class="interactive-card info-trigger h-100 w-100 text-start" type="button"
+                    data-info-kind="{{ kind|title }}" data-info-title="{{ item.title }}"
+                    data-info-summary="{{ item.overview }}" data-info-meta="{{ item.duration }}"
+                    data-info-url="{{ url_for('explore_detail', kind=kind, slug=item.slug) }}">
+                    <i class="bi bi-arrow-up-right"></i><strong>{{ item.title }}</strong><small>{{ item.overview }}</small>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div></section>
+{% endblock %}

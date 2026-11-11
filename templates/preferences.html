@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}College Preferences | CareerCompass{% endblock %}
+{% block content %}
+<section class="page-hero py-5"><div class="container py-4"><span class="eyebrow light">Accurate course-first matching</span><h1 class="display-5 fw-bold mt-2">Student preferences</h1><p class="lead mb-0">Your residence and preferred study location are separate. CareerCompass never substitutes an unrelated course.</p></div></section>
+
+<section class="py-5"><div class="container"><div class="row g-4 align-items-start">
+  <div class="col-xl-5">
+    <form method="post" class="content-card preference-form" id="preferenceForm">
+      <span class="card-kicker">Your choices</span><h2 class="h4 mb-4">Build a verified shortlist</h2>
+
+      <div class="form-section-label"><i class="bi bi-house"></i> Current residence <small>Does not restrict results</small></div>
+      <div class="row g-3 location-group" data-location-group="residence">
+        <div class="col-12"><label class="form-label" for="residenceCountry">Country</label><input class="form-control location-country" id="residenceCountry" name="country" value="{{ values.get('country','') }}" list="countryOptions" placeholder="Search country"></div>
+        <div class="col-md-6"><label class="form-label" for="residenceState">State / region</label><input class="form-control location-subdivision" id="residenceState" name="state" value="{{ values.get('state','') }}" list="residenceSubdivisionOptions" placeholder="Any state / region"><datalist id="residenceSubdivisionOptions"></datalist></div>
+        <div class="col-md-6"><label class="form-label" for="residenceCity">City</label><input class="form-control location-city" id="residenceCity" name="city" value="{{ values.get('city','') }}" list="residenceCityOptions" placeholder="Search or type city"><datalist id="residenceCityOptions"></datalist></div>
+      </div>
+
+      <div class="form-section-label mt-4"><i class="bi bi-mortarboard"></i> Course and career</div>
+      <div class="row g-3">
+        <div class="col-12"><label class="form-label">Career field</label><select class="form-select course-category-filter" name="career_field"><option value="">All categories</option>{% for field in career_fields %}<option {% if values.get('career_field') == field %}selected{% endif %}>{{ field }}</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-label">Preferred course</label><input class="form-control course-search" name="preferred_course" value="{{ values.get('preferred_course','') }}" list="preferenceCourseOptions" required placeholder="Type a course or abbreviation"><datalist id="preferenceCourseOptions" class="course-options"></datalist><small class="form-text">Search 235 UG, PG and diploma programmes. Only separately stored college offerings are eligible.</small></div>
+        <div class="col-md-6"><label class="form-label">Study region</label><select class="form-select" name="study_scope" id="studyScope"><option {% if values.get('study_scope') == 'India' %}selected{% endif %}>India</option><option {% if values.get('study_scope') == 'Abroad' %}selected{% endif %}>Abroad</option><option {% if values.get('study_scope','Both') == 'Both' %}selected{% endif %}>Both</option></select></div>
+        <div class="col-md-6"><label class="form-label">Institution type</label><select class="form-select" name="institution_type"><option {% if values.get('institution_type','Either') == 'Either' %}selected{% endif %}>Either</option><option {% if values.get('institution_type') == 'Government' %}selected{% endif %}>Government</option><option {% if values.get('institution_type') == 'Private' %}selected{% endif %}>Private</option></select></div>
+      </div>
+
+      <div class="form-section-label mt-4"><i class="bi bi-geo-alt"></i> Preferred college location</div>
+      <div class="row g-3 location-group" data-location-group="preferred">
+        <div class="col-12"><label class="form-label" for="preferredCountry">Country</label><input class="form-control location-country" id="preferredCountry" name="preferred_country" value="{{ values.get('preferred_country','') }}" list="countryOptions" placeholder="Any country"></div>
+        <div class="col-md-6"><label class="form-label" id="preferredSubdivisionLabel" for="preferredState">State / province / region</label><input class="form-control location-subdivision" id="preferredState" name="preferred_state" value="{{ values.get('preferred_state','') }}" list="preferredSubdivisionOptions" placeholder="Any subdivision"><datalist id="preferredSubdivisionOptions"></datalist></div>
+        <div class="col-md-6"><label class="form-label" for="preferredCity">City</label><input class="form-control location-city" id="preferredCity" name="preferred_city" value="{{ values.get('preferred_city','') }}" list="preferredCityOptions" placeholder="Any city or type manually"><datalist id="preferredCityOptions"></datalist></div>
+      </div>
+
+      <div class="form-section-label mt-4"><i class="bi bi-wallet2"></i> Budget and display</div>
+      <div class="row g-3">
+        <div class="col-md-7"><label class="form-label">Annual tuition budget</label><input class="form-control" type="number" min="0" name="budget_amount" value="{{ values.get('budget_amount') or '' }}" placeholder="Optional"></div>
+        <div class="col-md-5"><label class="form-label">Currency</label><select class="form-select" name="budget_currency">{% for code in ['INR','USD','CAD','GBP','EUR','AUD','CHF','SGD','JPY','KRW','AED','NZD','MYR'] %}<option {% if values.get('budget_currency','INR') == code %}selected{% endif %}>{{ code }}</option>{% endfor %}</select></div>
+        <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" value="strict" name="budget_mode" id="strictBudget" {% if values.get('budget_mode') == 'strict' %}checked{% endif %}><label class="form-check-label" for="strictBudget">Strict budget: show only colleges with a verified fee within this amount</label></div></div>
+        <div class="col-md-6"><label class="form-label">Sort results</label><select class="form-select" name="sort"><option value="relevance">Best match</option><option value="location" {% if values.get('sort') == 'location' %}selected{% endif %}>Location</option><option value="ranking" {% if values.get('sort') == 'ranking' %}selected{% endif %}>Verified ranking</option><option value="tuition" {% if values.get('sort') == 'tuition' %}selected{% endif %}>Verified tuition</option></select></div>
+        <div class="col-12"><label class="form-label">Accessibility/accommodation requirements <span class="text-secondary">(optional)</span></label><textarea class="form-control" rows="2" name="accessibility" maxlength="500" placeholder="Stored for your planning; not used unless verified support data is available">{{ values.get('accessibility','') }}</textarea></div>
+      </div>
+      <datalist id="countryOptions">{% for country in countries %}<option value="{{ country }}">{% endfor %}</datalist><script type="application/json" class="course-catalog-data">{{ course_catalog|tojson }}</script>
+      <div class="d-flex gap-2 mt-4"><button class="btn btn-primary flex-grow-1" type="submit">Search colleges <i class="bi bi-search"></i></button><a class="btn btn-outline-secondary" href="{{ url_for('preferences') }}">Reset</a></div>
+      <small class="d-block text-secondary mt-3">Unknown fees are never marked affordable. Currency conversion is not guessed.</small>
+    </form>
+  </div>
+
+  <div class="col-xl-7">
+    {% if bundle is not none %}
+      <div class="results-heading mb-3"><div><span class="card-kicker">Recommendation result</span><h2 class="h4 mb-1">{{ bundle.exact_count }} exact matches</h2><p class="text-secondary mb-0">Country, state, city, programme, institution type and strict budget were applied before ranking.</p></div></div>
+      {% if bundle.page_items %}
+        <div class="d-grid gap-3">
+        {% for college in bundle.page_items %}
+          {% if loop.first or college.location_label != bundle.page_items[loop.index0-1].location_label %}<h3 class="result-group-title">{{ college.location_label }}</h3>{% endif %}
+          {% include "partials/college_match_card.html" %}
+        {% endfor %}
+        </div>
+        {% if bundle.has_more %}<a class="btn btn-outline-primary w-100 mt-3" href="{{ url_for('colleges', preferred_course=values.preferred_course, career_field=values.career_field, study_scope=values.study_scope, institution_type=values.institution_type, preferred_country=values.preferred_country, preferred_state=values.preferred_state, preferred_city=values.preferred_city, budget_amount=values.budget_amount or '', budget_currency=values.budget_currency, budget_mode=values.budget_mode, sort=values.sort) }}">Open all results</a>{% endif %}
+      {% else %}
+        <div class="content-card empty-state"><i class="bi bi-funnel"></i><h3 class="h5">No colleges found matching all your selected preferences.</h3><p>No mandatory preference was ignored and no unrelated institution was substituted.</p><p class="small text-secondary">Applied: {{ values.preferred_course or 'Any course' }} · {{ values.institution_type }} · {{ values.preferred_city or 'Any city' }}, {{ values.preferred_state or 'Any state' }}, {{ values.preferred_country or values.study_scope }}{% if values.budget_mode == 'strict' and values.budget_amount %} · maximum {{ values.budget_currency }} {{ values.budget_amount|int }} verified annual tuition{% endif %}</p></div>
+      {% endif %}
+      {% if not values.show_alternatives and bundle.exact_count == 0 %}<form method="post" class="mt-3"><input type="hidden" name="show_alternatives" value="1">{% for key, value in values.items() %}{% if key not in ['show_alternatives','page'] and value is not none %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}<button class="btn btn-outline-primary w-100" type="submit">Explore colleges outside my selected location</button></form>{% elif bundle.alternatives %}<div class="alert alert-warning mt-3"><strong>Broader alternatives shown by your request.</strong> These do not satisfy the selected city/state boundary and are labelled on each card.</div>{% endif %}
+    {% else %}
+      <div class="content-card preference-placeholder"><i class="bi bi-sliders"></i><h2 class="h4">Your results will appear here</h2><p>Course relevance is checked first. Location, verified budget information and dated ranking evidence then determine order and labels.</p></div>
+    {% endif %}
+  </div>
+</div></div></section>
+{% endblock %}

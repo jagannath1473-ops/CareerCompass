@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }} | CareerCompass{% endblock %}
+{% block content %}
+<section class="page-hero py-5"><div class="container py-4"><span class="eyebrow light">{{ kind }} details</span><h1 class="display-5 fw-bold mt-2">{{ item.title }}</h1><p class="lead mb-0">{{ item.overview }}</p></div></section>
+<section class="py-5"><div class="container"><div class="row g-4">
+    <div class="col-lg-8">
+        <div class="content-card mb-4"><span class="card-kicker">Overview</span><h2 class="h4">What this path involves</h2><p class="text-secondary mb-0">{{ item.overview }}</p></div>
+        <div class="row g-4">
+            <div class="col-md-6"><div class="content-card h-100"><span class="card-kicker">Eligibility</span><h2 class="h5">Entry foundation</h2><p>{{ item.eligibility }}</p><hr><strong>Typical duration</strong><p class="text-secondary mb-0">{{ item.duration }}</p></div></div>
+            <div class="col-md-6"><div class="content-card h-100"><span class="card-kicker">Study</span><h2 class="h5">Important subjects</h2><ul class="clean-list">{% for subject in item.subjects %}<li><i class="bi bi-check2"></i>{{ subject }}</li>{% endfor %}</ul><strong>Entrance routes</strong><p class="text-secondary mb-0">{{ item.entrance_exams|join(', ') }}</p></div></div>
+            <div class="col-md-6"><div class="content-card h-100"><span class="card-kicker">Capabilities</span><h2 class="h5">Required skills</h2><div class="d-flex flex-wrap gap-2">{% for skill in item.skills %}<span class="tag-chip">{{ skill }}</span>{% endfor %}</div></div></div>
+            <div class="col-md-6"><div class="content-card h-100"><span class="card-kicker">Outcomes</span><h2 class="h5">Opportunities</h2><ul class="clean-list">{% for opportunity in item.opportunities %}<li><i class="bi bi-arrow-right"></i>{{ opportunity }}</li>{% endfor %}</ul></div></div>
+        </div>
+        <div class="content-card mt-4"><span class="card-kicker">Salary orientation</span><h2 class="h5">Indicative range</h2><p class="mb-0">{{ item.salary }}</p></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="content-card sticky-detail"><span class="card-kicker">Career roadmap</span><h2 class="h5 mb-3">Suggested next steps</h2><div class="vertical-roadmap">{% for step in item.roadmap %}<div><span>{{ loop.index }}</span><p>{{ step }}</p></div>{% endfor %}</div><a class="btn btn-primary w-100 mt-3" href="{{ url_for('preferences') }}">Find matching colleges</a></div>
+    </div>
+</div>
+{% if related %}<div class="mt-5"><span class="card-kicker">Related {{ kind }}s</span><div class="row g-3 mt-1">{% for related_item in related %}<div class="col-md-4"><a class="related-link-card" href="{{ url_for('explore_detail', kind=kind, slug=related_item.slug) }}"><strong>{{ related_item.title }}</strong><i class="bi bi-arrow-right"></i></a></div>{% endfor %}</div></div>{% endif %}
+<div class="alert alert-info mt-4 mb-0"><i class="bi bi-info-circle me-2"></i>Eligibility, entrance rules and salaries change. Verify the latest requirements with the specific institution or employer.</div>
+</div></section>
+{% endblock %}

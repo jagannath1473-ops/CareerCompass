@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}CareerCompass | Find Your Direction{% endblock %}
+
+{% block content %}
+<section class="hero-section overflow-hidden">
+    <div class="container py-5">
+        <div class="row align-items-center min-vh-75 g-5">
+            <div class="col-lg-7">
+                <span class="eyebrow"><i class="bi bi-stars"></i> Built for students after Class 12</span>
+                <h1 class="display-3 fw-bold mt-3">Your interests can point to a <span>clearer career path.</span></h1>
+                <p class="lead text-secondary mt-4">Take a short aptitude and interest quiz, then explore verified programme matches across 235 courses and 296 Indian and international institutions.</p>
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a class="btn btn-primary btn-lg px-4" href="{{ url_for('quiz') }}">Start free quiz <i class="bi bi-arrow-right"></i></a>
+                    <a class="btn btn-outline-dark btn-lg px-4" href="{{ url_for('preferences') }}">Find colleges</a>
+                </div>
+                <div class="hero-stats d-flex flex-wrap gap-4 mt-5">
+                    <div><strong>235</strong><span>course choices</span></div>
+                    <div><strong>296</strong><span>institutions</span></div>
+                    <div><strong>36</strong><span>Indian states &amp; UTs</span></div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="hero-visual position-relative">
+                    <div class="orb orb-one"></div>
+                    <div class="orb orb-two"></div>
+                    <div class="result-preview shadow-lg">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="small text-uppercase fw-semibold text-secondary">Sample result</span>
+                            <i class="bi bi-stars text-warning fs-4"></i>
+                        </div>
+                        <div class="preview-icon"><i class="bi bi-cpu"></i></div>
+                        <h3 class="mt-3">Technology</h3>
+                        <p class="text-secondary">Strong match for building, logical problem-solving and digital tools.</p>
+                        <div class="mini-bar"><span style="width: 92%"></span></div>
+                        <div class="row g-2 mt-3">
+                            <div class="col-6"><div class="mini-chip">B.Tech CSE</div></div>
+                            <div class="col-6"><div class="mini-chip">AI Engineer</div></div>
+                            <div class="col-6"><div class="mini-chip">BCA</div></div>
+                            <div class="col-6"><div class="mini-chip">Cybersecurity</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="trust-strip" aria-label="CareerCompass highlights">
+    <div class="container">
+        <div class="trust-grid">
+            <div><i class="bi bi-funnel"></i><span><strong>Strict matching</strong><small>No silent location changes</small></span></div>
+            <div><i class="bi bi-patch-check"></i><span><strong>Transparent evidence</strong><small>Official links and fee status</small></span></div>
+            <div><i class="bi bi-globe-asia-australia"></i><span><strong>India + abroad</strong><small>Dynamic location discovery</small></span></div>
+            <div><i class="bi bi-shield-check"></i><span><strong>Privacy minded</strong><small>No unnecessary personal details</small></span></div>
+        </div>
+    </div>
+</section>
+
+<section class="section-space pt-5">
+    <div class="container">
+        <div class="discovery-panel">
+            <div class="discovery-panel-copy"><span class="eyebrow">Choose your starting point</span><h2 class="fw-bold mt-2">Move from curiosity to a practical plan.</h2><p class="text-secondary mb-0">Start with your interests, browse the catalogue directly, or build a college shortlist using strict filters.</p></div>
+            <div class="discovery-actions">
+                <a href="{{ url_for('quiz') }}"><i class="bi bi-ui-checks-grid"></i><span><strong>Take the quiz</strong><small>Discover your strongest direction</small></span><i class="bi bi-arrow-right"></i></a>
+                <a href="{{ url_for('courses') }}"><i class="bi bi-journals"></i><span><strong>Explore courses</strong><small>Compare subjects and roadmaps</small></span><i class="bi bi-arrow-right"></i></a>
+                <a href="{{ url_for('preferences') }}"><i class="bi bi-building-check"></i><span><strong>Match colleges</strong><small>Use course, location and budget</small></span><i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works" class="section-space bg-soft">
+    <div class="container">
+        <div class="section-heading text-center mx-auto">
+            <span class="eyebrow">A simple process</span>
+            <h2 class="fw-bold mt-2">From confusion to a useful shortlist</h2>
+        </div>
+        <div class="row g-4 mt-4">
+            <div class="col-md-4">
+                <div class="step-card h-100"><span>01</span><i class="bi bi-ui-checks-grid"></i><h4>Answer honestly</h4><p>Choose the activity or work style that feels most natural to you.</p></div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card h-100"><span>02</span><i class="bi bi-bar-chart-line"></i><h4>See your pattern</h4><p>Your answers are scored across six transparent interest dimensions.</p></div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card h-100"><span>03</span><i class="bi bi-signpost-split"></i><h4>Explore next steps</h4><p>Review suitable courses, careers, essential skills and a practical roadmap.</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-space">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+            <div class="section-heading">
+                <span class="eyebrow">Career dimensions</span>
+                <h2 class="fw-bold mt-2">There is more than one way to succeed</h2>
+            </div>
+            <a href="{{ url_for('quiz') }}" class="text-link">Discover your strongest area <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row g-4 mt-3">
+            {% for key, category in categories.items() %}
+            <div class="col-md-6 col-lg-4">
+                <button class="path-card info-trigger h-100 w-100 text-start" type="button"
+                    data-info-kind="Career category" data-info-title="{{ category.label }}"
+                    data-info-summary="{{ category.description }}"
+                    data-info-meta="Courses: {{ category.courses|join(', ') }} • Technologies: {{ category.technologies|join(', ') }}"
+                    data-info-url="{{ url_for('category_detail', category_key=key) }}">
+                    <div class="path-icon"><i class="bi {{ category.icon }}"></i></div>
+                    <h4>{{ category.label }}</h4>
+                    <p>{{ category.description }}</p>
+                    <small>{{ category.careers[:2] | join(' • ') }} <i class="bi bi-arrow-up-right"></i></small>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section-space pt-0">
+    <div class="container">
+        <div class="cta-panel text-center">
+            <span class="eyebrow light">Your next step</span>
+            <h2 class="fw-bold mt-2">You do not need your whole life planned today.</h2>
+            <p class="mx-auto">You only need a sensible direction to explore. Use the result as a starting point, then verify it through subjects, projects and conversations.</p>
+            <a class="btn btn-light btn-lg mt-3" href="{{ url_for('quiz') }}">Find my direction</a>
+        </div>
+    </div>
+</section>
+
+<section class="section-space bg-soft" id="faq">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-5">
+                <span class="eyebrow">Common doubts</span>
+                <h2 class="fw-bold mt-2">Frequently asked questions</h2>
+                <p class="text-secondary">The quiz supports exploration; it does not lock you into one career.</p>
+            </div>
+            <div class="col-lg-7">
+                <div class="accordion accordion-flush" id="faqAccordion">
+                    <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">Is the recommendation final?</button></h3><div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion"><div class="accordion-body">No. It is a structured starting point based on your current answers. Discuss major decisions with teachers, family and qualified counsellors.</div></div></div>
+                    <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">Can two career areas suit me?</button></h3><div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body">Yes. Many careers combine areas—for example, UI/UX combines technology and creativity, while healthcare management combines health and business.</div></div></div>
+                    <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">Are salary ranges guaranteed?</button></h3><div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body">No. Salaries vary by city, qualification, college, employer, skills and experience. The ranges are broad orientation figures only.</div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

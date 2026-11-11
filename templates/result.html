@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ result.student_name }}'s Result | CareerCompass{% endblock %}
+
+{% block content %}
+<section class="result-hero py-5">
+    <div class="container py-4">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <span class="eyebrow light">Personal career snapshot</span>
+                <h1 class="display-5 fw-bold mt-2">{{ result.student_name }}, your strongest match is <span>{{ primary.label }}</span>.</h1>
+                <p class="lead">{{ primary.description }}</p>
+            </div>
+            <div class="col-lg-4 text-lg-end"><div class="result-badge"><i class="bi {{ primary.icon }}"></i><span>Top direction</span><strong>{{ primary.label }}</strong></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="content-card h-100">
+                    <span class="card-kicker">Your score pattern</span>
+                    <h2 class="h4 mb-4">How your interests compare</h2>
+                    {% for row in score_rows %}
+                    <div class="score-row mb-3">
+                        <div class="d-flex justify-content-between"><span>{{ row.label }}</span><strong>{{ row.score }}</strong></div>
+                        <div class="score-track"><span style="width:{{ row.percent }}%"></span></div>
+                    </div>
+                    {% endfor %}
+                    <p class="small text-secondary mt-4 mb-0">Each selected answer adds one point to its matching career dimension.</p>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="content-card h-100">
+                    <span class="card-kicker">Recommended learning paths</span>
+                    <h2 class="h4">Courses worth exploring</h2>
+                    <div class="row g-3 mt-1">
+                        {% for course in primary.courses %}
+                        <div class="col-md-4"><button class="recommend-tile info-trigger h-100 w-100 text-start" type="button" data-info-kind="Course" data-info-title="{{ course }}" data-info-summary="Explore eligibility, subjects, entrance routes, skills and opportunities for {{ course }}." data-info-meta="Primary match: {{ primary.label }}" data-info-url="{{ url_for('explore_detail', kind='course', slug=slugify(course)) }}"><i class="bi bi-mortarboard"></i><strong>{{ course }}</strong><small>Primary match</small></button></div>
+                        {% endfor %}
+                    </div>
+                    <div class="secondary-match mt-4"><i class="bi {{ secondary.icon }}"></i><div><small>Your secondary direction</small><strong>{{ secondary.label }}</strong><p>{{ secondary.description }}</p></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-lg-7">
+                <div class="content-card h-100">
+                    <span class="card-kicker">Career possibilities</span>
+                    <h2 class="h4 mb-3">Roles connected to {{ primary.label }}</h2>
+                    <div class="career-list">
+                        {% for career in primary.careers %}<button class="info-trigger" type="button" data-info-kind="Career" data-info-title="{{ career }}" data-info-summary="Explore responsibilities, preparation, skills, roadmap and indicative salary information for {{ career }}." data-info-meta="Career path: {{ primary.label }}" data-info-url="{{ url_for('explore_detail', kind='career', slug=slugify(career)) }}"><span>{{ '%02d'|format(loop.index) }}</span><strong>{{ career }}</strong><i class="bi bi-arrow-up-right"></i></button>{% endfor %}
+                    </div>
+                    <div class="salary-note mt-4"><i class="bi bi-currency-rupee"></i><div><small>Broad salary orientation</small><strong>{{ primary.salary }}</strong></div></div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="content-card h-100">
+                    <span class="card-kicker">Build these foundations</span>
+                    <h2 class="h4 mb-3">Important skills</h2>
+                    {% for skill in primary.skills %}<button class="skill-pill info-trigger w-100" type="button" data-info-kind="Skill" data-info-title="{{ skill }}" data-info-summary="Learn why {{ skill }} matters and how to develop evidence of it through projects." data-info-meta="Useful for {{ primary.label }}" data-info-url="{{ url_for('explore_detail', kind='skill', slug=slugify(skill)) }}"><i class="bi bi-check2"></i>{{ skill }}</button>{% endfor %}
+                    <div class="mt-4"><span class="card-kicker">Useful technologies</span>{% for technology in primary.technologies %}<button class="tag-chip tag-button info-trigger" type="button" data-info-kind="Technology" data-info-title="{{ technology }}" data-info-summary="Explore how {{ technology }} supports {{ primary.label|lower }} study and work." data-info-meta="Technology overview" data-info-url="{{ url_for('explore_detail', kind='technology', slug=slugify(technology)) }}">{{ technology }}</button>{% endfor %}</div>
+                    <a href="{{ url_for('courses') }}" class="btn btn-outline-primary w-100 mt-4">Compare course options</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="roadmap-card mt-4">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-3"><span class="card-kicker">Suggested roadmap</span><h2 class="h4">Turn interest into evidence</h2></div>
+                <div class="col-lg-9">
+                    <div class="roadmap">
+                        <div><span>1</span><strong>Explore</strong><small>Read course syllabi</small></div>
+                        <div><span>2</span><strong>Try</strong><small>Complete a mini-project</small></div>
+                        <div><span>3</span><strong>Verify</strong><small>Talk to students/professionals</small></div>
+                        <div><span>4</span><strong>Prepare</strong><small>Plan exams and applications</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4 mb-0"><i class="bi bi-info-circle me-2"></i><strong>Remember:</strong> this result is guidance, not a diagnosis or guarantee. Use it with academic performance, practical experience and advice from trusted adults or counsellors.</div>
+    </div>
+</section>
+{% endblock %}
