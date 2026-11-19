@@ -287,7 +287,7 @@ def ensure_column(db, table, column, definition):
 def init_db():
     # One recoverable snapshot is created before the first upgrade of an
     # existing database.  It is never overwritten on later starts.
-    backup_path = DATABASE + ".pre_strict_upgrade_backup"
+    backup_path = DATABASE + ".pre_nationwide_upgrade_backup"
     if os.path.exists(DATABASE) and not os.path.exists(backup_path):
         shutil.copy2(DATABASE, backup_path)
     db = sqlite3.connect(DATABASE)
@@ -511,7 +511,11 @@ def college_from_row(row):
 
 @app.route("/")
 def home():
-    return render_template("index.html", categories=CATEGORIES)
+    return render_template(
+        "index.html", categories=CATEGORIES,
+        course_count=len(COURSE_CATALOG), institution_count=len(COLLEGES),
+        indian_location_count=len(INDIA_LOCATIONS),
+    )
 
 
 @app.get("/health")
@@ -665,7 +669,9 @@ def parse_preference(source):
     values["study_scope"] = values["study_scope"] or "Both"
     values["institution_type"] = values["institution_type"] or "Either"
     values["budget_currency"] = values["budget_currency"] or "INR"
-    values["budget_mode"] = values["budget_mode"] or "prefer"
+    # Kept in the stored schema for backward compatibility.  Budget is now
+    # always a preference used for ordering and labels, never an exclusion.
+    values["budget_mode"] = "prefer"
     values["sort"] = values["sort"] or "relevance"
     if values["study_scope"] == "India":
         values["preferred_country"] = "India"
@@ -788,7 +794,15 @@ def api_subdivisions():
 def api_cities():
     country = (request.args.get("country") or "").strip()
     subdivision = (request.args.get("subdivision") or "").strip()
-    return jsonify({"country": country, "subdivision": subdivision, "cities": cities_for(country, subdivision), "manual_entry_supported": True})
+    known = set(cities_for(country, subdivision))
+    if country and subdivision:
+        known.update(
+            row[0] for row in get_db().execute(
+                "SELECT DISTINCT city FROM colleges WHERE country = ? AND state = ?",
+                (country, subdivision),
+            ).fetchall()
+        )
+    return jsonify({"country": country, "subdivision": subdivision, "cities": sorted(known), "manual_entry_supported": True})
 
 
 @app.get("/api/colleges/search")
@@ -879,7 +893,7 @@ def latest_preference():
     if row is None:
         return parse_preference({})
     values = dict(row)
-    values["budget_mode"] = values.get("budget_mode") or "prefer"
+    values["budget_mode"] = "prefer"
     values["preferred_country"] = values.get("preferred_country") or ("India" if values.get("study_scope") == "India" else "")
     values["preferred_state"] = values.get("preferred_state") or ""
     values["preferred_city"] = values.get("preferred_city") or ""
@@ -934,7 +948,7 @@ def detect_location(query, colleges):
             found["preferred_state"] = subdivision
             break
     cities = sorted({college["city"] for college in colleges}, key=len, reverse=True)
-    city_aliases = {"bangalore": "Bengaluru", "bombay": "Mumbai", "calcutta": "Kolkata", "madras": "Chennai"}
+    city_aliases = {"vizag": "Visakhapatnam", "bangalore": "Bengaluru", "bombay": "Mumbai", "calcutta": "Kolkata", "madras": "Chennai"}
     for alias, city in city_aliases.items():
         if alias in query:
             found["preferred_city"] = city
@@ -957,9 +971,22 @@ def detect_location(query, colleges):
     return found
 
 
+def parse_chat_search_context(current_topic):
+    if not (current_topic or "").startswith("college_search:"):
+        return {}, ""
+    try:
+        payload = json.loads(current_topic.split(":", 1)[1])
+        return payload.get("preference", {}), payload.get("first_slug", "")
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}, ""
+
+
 def chat_college_search(query, conversation):
     colleges = all_colleges()
     preference = latest_preference()
+    previous_preference, previous_first_slug = parse_chat_search_context(conversation["current_topic"] or "")
+    if previous_preference:
+        preference.update(previous_preference)
     detected_course = detect_course(query)
     if detected_course:
         preference["preferred_course"] = detected_course
@@ -989,12 +1016,16 @@ def chat_college_search(query, conversation):
     if lakh_match:
         preference["budget_amount"] = float(lakh_match.group(1)) * 100000
         preference["budget_currency"] = "INR"
-        preference["budget_mode"] = "strict"
+        preference["budget_mode"] = "prefer"
     preference["sort"] = "ranking" if "best" in query or "top" in query else "relevance"
 
     current_topic = conversation["current_topic"] or ""
-    if ("why did" in query or "why this" in query or "why was" in query) and current_topic.startswith("college:"):
-        slug = current_topic.split(":", 1)[1]
+    if "why" in query and any(phrase in query for phrase in ["other state", "outside state", "other city", "outside city"]):
+        return "Exact results never relax a selected country, state or city. Colleges outside that boundary appear only after an explicit alternatives request and are labelled as broader alternatives. If an exact card appears wrong, reset the search and report its name so the stored location can be corrected.", [{"text": "Review exact filters", "url": url_for("colleges")}], current_topic
+
+    explanation_slug = previous_first_slug or (current_topic.split(":", 1)[1] if current_topic.startswith("college:") else "")
+    if ("why did" in query or "why this" in query or "why was" in query) and explanation_slug:
+        slug = explanation_slug
         college = next((item for item in colleges if item["slug"] == slug), None)
         if college:
             explanation = recommend([college], preference)
@@ -1010,11 +1041,11 @@ def chat_college_search(query, conversation):
     results = sort_results(recommend(colleges, preference, include_alternatives=wants_alternatives), preference["sort"])
     if "no college" in query or "no match" in query or "not matching" in query:
         if results:
-            return f"Your latest saved filters produce {len(results)} exact records. Country, state, city, course, institution type and strict budget were enforced before ranking. Unknown fees are not treated as affordable.", [{"text": "Review results", "url": url_for("preferences")}], None
-        return "No institution passed all latest filters. The usual causes are an exact course with no catalogue coverage in that location, a restrictive institution type, or strict budget mode when fees are unverified. CareerCompass will not fill the gap with an unrelated college.", [{"text": "Broaden preferences", "url": url_for("preferences")}], None
+            return f"Your latest saved filters produce {len(results)} exact records. Country, state, city, course and institution type were enforced before ranking. Budget changes ordering only; unknown fees are labelled, not treated as affordable.", [{"text": "Review results", "url": url_for("preferences")}], None
+        return "No institution passed all latest mandatory filters. The usual causes are an exact course with no catalogue coverage in that location or a restrictive institution type. Budget does not remove colleges. CareerCompass will not fill the gap with an unrelated college.", [{"text": "Broaden preferences", "url": url_for("preferences")}], None
 
     if not results:
-        return "No colleges found matching all your selected preferences. I enforced the selected country, state, city, programme, institution type and strict budget. Ask ‘show alternatives outside my preferred city’ only if you want a separately labelled broader search.", [{"text": "Adjust preferences", "url": url_for("preferences")}], None
+        return "No colleges found matching all your selected preferences. I enforced the selected country, state, city, programme and institution type. Budget was used only as a ranking preference. Ask ‘show alternatives outside my preferred city’ only if you want a separately labelled broader search.", [{"text": "Adjust preferences", "url": url_for("preferences")}], None
     top = results[:5]
     exact_count = sum(1 for item in results if item["location_tier"] == 0)
     alternative_count = len(results) - exact_count
@@ -1027,7 +1058,13 @@ def chat_college_search(query, conversation):
         answer = f"I found {exact_count} exact matches for {context}. All mandatory filters were applied before ranking. Top results:\n" + "\n".join(lines)
     links = [{"text": college["name"], "url": url_for("college_detail", slug=college["slug"])} for college in top]
     links.append({"text": "Open full filtered explorer", "url": url_for("colleges", preferred_course=preference.get("preferred_course", ""), preferred_country=preference.get("preferred_country", ""), preferred_state=preference.get("preferred_state", ""), preferred_city=preference.get("preferred_city", ""), study_scope=preference.get("study_scope", "Both"))})
-    return answer, links, f"college:{top[0]['slug']}"
+    context_preference = {key: preference.get(key) for key in [
+        "preferred_course", "career_field", "study_scope", "institution_type",
+        "preferred_country", "preferred_state", "preferred_city", "budget_amount",
+        "budget_currency", "sort",
+    ]}
+    topic = "college_search:" + json.dumps({"preference": context_preference, "first_slug": top[0]["slug"]}, separators=(",", ":"))
+    return answer, links, topic
 
 
 def build_chat_answer(message, conversation):
@@ -1045,8 +1082,9 @@ def build_chat_answer(message, conversation):
     if any(word in query for word in college_words) or (detect_course(query) and any(word in query for word in ["show", "suggest", "best", "available", "offer"])):
         return chat_college_search(query, conversation)
 
-    if current_topic.startswith("college:") and any(word in query for word in ["exam", "entrance", "eligibility", "fee", "admission"]):
-        slug = current_topic.split(":", 1)[1]
+    contextual_preference, contextual_slug = parse_chat_search_context(current_topic)
+    if (current_topic.startswith("college:") or contextual_slug) and any(word in query for word in ["exam", "entrance", "eligibility", "fee", "admission"]):
+        slug = contextual_slug or current_topic.split(":", 1)[1]
         row = db.execute("SELECT * FROM colleges WHERE slug = ?", (slug,)).fetchone()
         if row:
             college = college_from_row(row)

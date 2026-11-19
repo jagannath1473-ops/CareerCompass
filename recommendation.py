@@ -85,9 +85,13 @@ def matches_study_scope(college, preference):
     return not ((scope == "India" and college["country"] != "India") or (scope == "Abroad" and college["country"] == "India"))
 
 def recommend(colleges, preference, include_alternatives=False):
-    """Return strict exact-location matches; broader locations require opt-in."""
+    """Return exact mandatory-filter matches; broader locations require opt-in.
+
+    Budget is deliberately a ranking preference, never an exclusion rule.  A
+    missing or higher verified fee cannot silently remove an otherwise valid
+    course/location/ownership match.
+    """
     results, institution_type = [], preference.get("institution_type", "Either")
-    strict_budget = preference.get("budget_mode") == "strict"
     for college in colleges:
         if not matches_study_scope(college, preference):
             continue
@@ -103,8 +107,6 @@ def recommend(colleges, preference, include_alternatives=False):
         if (not include_alternatives and tier != 0) or (include_alternatives and tier == 0):
             continue
         status, budget_score = budget_status(college, preference)
-        if strict_budget and preference.get("budget_amount") and status != "Confirmed within budget":
-            continue
         item, rank = dict(college), college.get("rank_value")
         rank_score = max(0, 21 - min(int(rank), 20)) if rank else 0
         item.update({"matched_course": matched_course or preference.get("preferred_course") or "Multiple programmes",

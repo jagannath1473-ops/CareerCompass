@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-15%20passing-16a34a)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-18%20passing-16a34a)](#testing)
 
 ## Live application
 
@@ -21,10 +21,11 @@ CareerCompass combines a transparent 12-question aptitude and interest quiz with
 - Six interactive career categories with Bootstrap information popups.
 - Aptitude and interest quiz with saved result history.
 - **235** searchable undergraduate, postgraduate and diploma programmes.
-- **296** institution records: **207 Indian** and **89 international**.
+- **412** institution records: **323 Indian** and **89 international**.
 - All 28 Indian states and 8 Union Territories in the location selector.
 - Dynamic country → subdivision → city selection with manual city fallback.
-- Strict course, country, state, city, ownership and budget filtering.
+- Strict course, country, state, city and ownership filtering.
+- Budget-aware ranking that keeps above-budget and unknown-fee matches visible with honest labels.
 - Broader location alternatives only after explicit student consent.
 - Detailed course, career and institution pages.
 - Rule-based, database-backed chatbot with conversation history.
@@ -39,9 +40,9 @@ CareerCompass ranks only after mandatory filtering:
 1. The institution must contain the selected programme or a narrow defined equivalent.
 2. Country, state/province and city are enforced whenever selected.
 3. Government/private ownership is enforced.
-4. Strict-budget mode accepts only verified same-currency annual tuition at or below the limit.
-5. Unknown tuition is never presented as confirmed affordable.
-6. Ranking and accreditation evidence influence ordering only after all filters pass.
+4. A verified same-currency fee within budget receives a ranking boost.
+5. Above-budget and unknown-fee institutions remain visible; unknown tuition is never presented as confirmed affordable.
+6. Ranking and accreditation evidence influence ordering only after mandatory filters pass.
 
 If nothing satisfies every condition, the application returns zero exact matches and explains which filters were applied. Broader alternatives are a separate user-controlled action.
 
@@ -62,7 +63,8 @@ career-guidance-website/
 ├── app.py                    Flask routes, APIs, migrations, quiz and chatbot
 ├── recommendation.py         Shared strict recommendation engine
 ├── course_catalog.py         Independent 235-programme catalogue
-├── college_data.py           Indian and international institution records
+├── college_data.py           Base Indian and international institution records
+├── college_extension.py      Nationwide explicit programme extension
 ├── geo_data.py               Countries, subdivisions, cities and aliases
 ├── catalog.py                Career, course, skill and technology details
 ├── templates/                Responsive Jinja templates
@@ -112,7 +114,7 @@ py app.py
 2. Copy the old `career_guide.db` into this project folder.
 3. Start `py app.py`.
 
-Migrations are additive and preserve quiz results, preferences and conversations. Before migrating an existing local database, the application creates `career_guide.db.pre_strict_upgrade_backup` once.
+Migrations are additive and preserve quiz results, preferences and conversations. Before migrating an existing local database, the application creates `career_guide.db.pre_nationwide_upgrade_backup` once.
 
 ## Testing
 
@@ -120,14 +122,15 @@ Migrations are additive and preserve quiz results, preferences and conversations
 py -m unittest discover -s tests -v
 ```
 
-Current result: **15 tests passing**. The suite covers:
+Current result: **18 tests passing**. The suite covers:
 
 - strict Vijayawada/private/CSE matching;
 - wrong-state leakage regression;
 - explicit alternative opt-in;
 - all 36 Indian state and UT selector values;
 - course catalogue uniqueness and category filtering;
-- strict institution type and budget behaviour;
+- strict institution type plus non-excluding budget ranking;
+- Visakhapatnam/Vizag matching and nationwide weak-state searches;
 - required India and international searches;
 - quiz and chatbot regressions;
 - preservation of legacy SQLite records.

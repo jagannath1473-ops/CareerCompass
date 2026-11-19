@@ -403,6 +403,49 @@ INTERNATIONAL_ROWS = [
 COLLEGES = [make_record(row[0], row[1], row[2], "India", row[3], row[4], row[5], quality=row[6], rank_value=row[7]) for row in INDIA_ROWS]
 COLLEGES += [make_record(row[0], row[1], row[2], row[3], row[4], row[5], row[6], quality=row[7], rank_value=row[8]) for row in INTERNATIONAL_ROWS]
 
+# Add the nationwide extension as explicit institution/programme records.  It
+# intentionally does not reuse a broad programme profile: the small course list
+# stored on each extension row is the eligibility gate used by recommendations.
+from college_extension import INDIAN_INSTITUTIONS  # noqa: E402
+
+
+def _extension_profile(row):
+    courses = set(row["courses"])
+    if courses <= {"MBBS", "Medicine", "Life Sciences"}:
+        return "medical"
+    if courses & {"B.Des", "Design", "Fine Arts"} and not courses & {"Engineering", "B.Tech Computer Science"}:
+        return "design"
+    if courses & {"B.Tech Computer Science", "Mechanical Engineering", "Engineering", "Artificial Intelligence"}:
+        return "tech"
+    if courses <= {"BBA", "Business", "Business Administration"}:
+        return "business"
+    return "comprehensive"
+
+
+existing_slugs = {college["slug"] for college in COLLEGES}
+for extension in INDIAN_INSTITUTIONS:
+    extension_slug = slugify(extension["name"])
+    if extension_slug in existing_slugs:
+        existing = next(college for college in COLLEGES if college["slug"] == extension_slug)
+        existing["courses"] = list(dict.fromkeys([*existing["courses"], *extension["courses"]]))
+        existing["career_fields"] = list(dict.fromkeys([*existing["career_fields"], *extension["career_fields"]]))
+        existing["source_note"] = extension["source_note"]
+        existing["last_verified"] = "2026-11-19"
+        continue
+    record = make_record(
+        extension["name"], extension["city"], extension["state"], "India",
+        extension["ownership"], _extension_profile(extension), extension["official_url"],
+    )
+    record.update(
+        courses=list(extension["courses"]),
+        career_fields=list(extension["career_fields"]),
+        source_note=extension["source_note"],
+        admission_url=extension.get("admission_url", extension["official_url"]),
+        last_verified="2026-11-19",
+    )
+    COLLEGES.append(record)
+    existing_slugs.add(extension_slug)
+
 # Records with institution-specific admission/fee links or verified fee notes.
 OVERRIDES = {
     "indian-institute-of-technology-bombay": {"admission_url": "https://www.iitb.ac.in/newacadhome/toadmission.jsp", "fee_url": "https://acad.iitb.ac.in/admissions/fees-structure", "fees": "2026-27 standard UG tuition is ₹100,000 per semester (₹200,000 annually); non-tuition charges and category exemptions vary.", "fee_currency": "INR", "annual_fee_amount": 200000, "entrance_exams": ["JEE Advanced"]},

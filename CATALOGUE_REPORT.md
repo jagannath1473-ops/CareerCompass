@@ -1,12 +1,12 @@
-# CareerCompass strict recommendation upgrade report
+# CareerCompass nationwide recommendation upgrade report
 
-Generated 5 November 2026 from the bundled source catalogue and automated tests.
+Generated 19 November 2026 from the bundled source catalogue and automated tests.
 
 ## Delivered data
 
 - Academic course catalogue: **235** unique programmes (40 Technology, 38 Analytical/Research, 39 Creative/Design, 40 People/Service, 38 Business/Leadership, 40 Health/Life Sciences).
 - Programme levels: undergraduate, postgraduate and diploma.
-- Institutions: **296** total — **207 India** and **89 international**.
+- Institutions: **412** total — **323 India** and **89 international**.
 - Indian location selector: all **28 states + 8 Union Territories**.
 - Global selector: **249 countries/territories**, offline subdivision/city lists for supported study destinations, and manual-city fallback.
 - Institution records with a stored numeric annual tuition: **2**. All other fees remain explicitly unverified; the application does not infer affordability.
@@ -17,26 +17,27 @@ The course catalogue is independent of institution offerings. Adding a course to
 
 | State / UT | Records | State / UT | Records |
 |---|---:|---|---:|
-| Andhra Pradesh | 8 | Arunachal Pradesh | 2 |
-| Assam | 8 | Bihar | 4 |
-| Chandigarh | 3 | Chhattisgarh | 4 |
-| Delhi | 11 | Goa | 3 |
-| Gujarat | 9 | Haryana | 6 |
-| Himachal Pradesh | 4 | Jammu and Kashmir | 5 |
-| Jharkhand | 3 | Karnataka | 15 |
-| Kerala | 10 | Madhya Pradesh | 7 |
-| Maharashtra | 17 | Manipur | 3 |
-| Meghalaya | 3 | Mizoram | 2 |
-| Nagaland | 2 | Odisha | 10 |
-| Puducherry | 3 | Punjab | 7 |
-| Rajasthan | 7 | Sikkim | 2 |
-| Tamil Nadu | 14 | Telangana | 7 |
-| Tripura | 2 | Uttar Pradesh | 11 |
-| Uttarakhand | 4 | West Bengal | 11 |
+| Andhra Pradesh | 20 | Arunachal Pradesh | 2 |
+| Assam | 11 | Bihar | 7 |
+| Chandigarh | 3 | Chhattisgarh | 7 |
+| Delhi | 13 | Goa | 4 |
+| Gujarat | 15 | Haryana | 8 |
+| Himachal Pradesh | 5 | Jammu and Kashmir | 6 |
+| Jharkhand | 6 | Karnataka | 23 |
+| Kerala | 16 | Ladakh | 1 |
+| Madhya Pradesh | 13 | Maharashtra | 27 |
+| Manipur | 3 | Meghalaya | 3 |
+| Mizoram | 2 | Nagaland | 2 |
+| Odisha | 15 | Puducherry | 3 |
+| Punjab | 10 | Rajasthan | 13 |
+| Sikkim | 2 | Tamil Nadu | 23 |
+| Telangana | 14 | Tripura | 2 |
+| Uttar Pradesh | 21 | Uttarakhand | 6 |
+| West Bengal | 17 |  |  |
 
-The selector includes all 36 states/UTs, but four Union Territories currently have no bundled institution row. The UI correctly returns zero exact matches for unsupported combinations.
+The selector includes all 36 states/UTs. Three Union Territories—Andaman and Nicobar Islands, Dadra and Nagar Haveli and Daman and Diu, and Lakshadweep—currently have no bundled institution row. The UI correctly returns zero exact matches for unsupported combinations rather than inventing coverage.
 
-### Vijayawada improvement
+### Andhra Pradesh city improvement
 
 The database now includes three private Vijayawada engineering institutions whose CSE offerings were checked on official pages:
 
@@ -44,7 +45,9 @@ The database now includes three private Vijayawada engineering institutions whos
 - Prasad V. Potluri Siddhartha Institute of Technology
 - Andhra Loyola Institute of Engineering and Technology
 
-No annual tuition number was stored because a comparable current official figure was not confirmed. Therefore, strict ₹4 lakh filtering intentionally returns zero rather than calling unknown fees affordable.
+Visakhapatnam now includes Andhra University College of Engineering, GITAM School of Technology, GVPCE, ANITS, Raghu Engineering College and Raghu Institute of Technology for explicit B.Tech CSE matching. `Vizag` is normalised to `Visakhapatnam` in chatbot and recommendation location checks.
+
+No annual tuition number was stored where a comparable current official figure was not confirmed. A ₹4 lakh preference therefore keeps those colleges visible as **Fees not verified** instead of calling them affordable or excluding them.
 
 ## International coverage
 
@@ -63,7 +66,7 @@ Other countries remain selectable for geographical completeness, but a selector 
 
 ## Strict filtering behaviour
 
-Default results enforce country, subdivision, city, programme, institution type, career field (when supplied), study scope and strict same-currency budget. Ranking occurs afterward. Unknown tuition is excluded in strict-budget mode.
+Default results enforce country, subdivision, city, programme, institution type, career field (when supplied) and study scope. Ranking occurs afterward. Budget is a preference only: confirmed same-currency within-budget records rank higher, above-budget records rank lower, and unknown fees remain visible with an explicit label.
 
 If there are no exact matches, the page displays: **“No colleges found matching all your selected preferences.”** It does not silently relax a filter. The separate **Explore colleges outside my selected location** control performs a second query and labels every broader result as an alternative.
 
@@ -82,12 +85,16 @@ The Preferences page, College Explorer, `/api/colleges/search`, and chatbot all 
 | Computer Science — California, United States | 6 | Stanford, UC Berkeley, UCLA, Caltech |
 | Business Administration — Toronto, Ontario | 1 | York University (Schulich BBA) |
 | Engineering — Bavaria, Germany | 2 | TUM, University of Erlangen–Nuremberg |
+| B.Tech CSE — Visakhapatnam, Andhra Pradesh | 6 | AUCE, GITAM, GVPCE, ANITS |
+| Engineering — Patna, Bihar | 3 | IIT Patna, NIT Patna, Aryabhatta Knowledge University |
+| Computer Science — Aizawl, Mizoram | 2 | Mizoram University, NIT Mizoram |
+| Computer Science — Leh, Ladakh | 1 | University of Ladakh |
 
 ## Automated verification
 
 Command: `py -m unittest discover -s tests -v`
 
-Result: **15 tests passed**. Coverage includes:
+Result: **18 tests passed**. Coverage includes:
 
 - all 36 Indian state/UT selector values;
 - course count, uniqueness and all six categories;
@@ -95,7 +102,9 @@ Result: **15 tests passed**. Coverage includes:
 - exact Vijayawada/private/CSE boundary;
 - no wrong-state leakage without explicit opt-in;
 - alternatives only after `show_alternatives=1`;
-- strict institution type and unknown-fee exclusion;
+- strict institution type and non-excluding budget preference ordering;
+- Visakhapatnam plus Vizag alias coverage;
+- state/city non-leakage checks for Bihar, Mizoram, Tripura, Chhattisgarh and Ladakh;
 - course-category API;
 - pagination without duplicates;
 - AIIMS exclusion for B.Tech CSE;
@@ -111,7 +120,7 @@ Institution names and domains are drawn from official institution sites. Ranking
 
 Remaining limitations are intentionally visible:
 
-- Most annual tuition is unknown, so strict-budget searches may return zero.
+- Most annual tuition is unknown; those results are visibly labelled and never claimed to be affordable.
 - The 235-course discovery catalogue is broader than the verified institution-offering catalogue.
 - Many existing records retain conservative programme-family data from the supplied 293-record project; specialised branches are not inferred.
 - Offline international city/subdivision coverage is not exhaustive; manual city entry remains available.

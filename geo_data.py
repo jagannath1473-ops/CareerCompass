@@ -75,7 +75,7 @@ WORLD_LOCATIONS = {
     "Malaysia": {"Kuala Lumpur": ["Kuala Lumpur"], "Selangor": ["Bandar Sunway", "Petaling Jaya", "Serdang"], "Johor": ["Johor Bahru"], "Penang": ["George Town"], "Perak": ["Kampar"]},
 }
 
-CITY_ALIASES = {"bangalore": "bengaluru", "bombay": "mumbai", "calcutta": "kolkata", "madras": "chennai", "poona": "pune", "trivandrum": "thiruvananthapuram", "cochin": "kochi", "allahabad": "prayagraj"}
+CITY_ALIASES = {"vizag": "visakhapatnam", "bangalore": "bengaluru", "bombay": "mumbai", "calcutta": "kolkata", "madras": "chennai", "poona": "pune", "trivandrum": "thiruvananthapuram", "cochin": "kochi", "allahabad": "prayagraj"}
 
 
 def subdivisions_for(country):
