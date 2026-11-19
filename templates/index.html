@@ -8,15 +8,15 @@
             <div class="col-lg-7">
                 <span class="eyebrow"><i class="bi bi-stars"></i> Built for students after Class 12</span>
                 <h1 class="display-3 fw-bold mt-3">Your interests can point to a <span>clearer career path.</span></h1>
-                <p class="lead text-secondary mt-4">Take a short aptitude and interest quiz, then explore verified programme matches across 235 courses and 296 Indian and international institutions.</p>
+                <p class="lead text-secondary mt-4">Take a short aptitude and interest quiz, then explore programme matches across {{ course_count }} courses and {{ institution_count }} Indian and international institutions.</p>
                 <div class="d-flex flex-wrap gap-3 mt-4">
                     <a class="btn btn-primary btn-lg px-4" href="{{ url_for('quiz') }}">Start free quiz <i class="bi bi-arrow-right"></i></a>
                     <a class="btn btn-outline-dark btn-lg px-4" href="{{ url_for('preferences') }}">Find colleges</a>
                 </div>
                 <div class="hero-stats d-flex flex-wrap gap-4 mt-5">
-                    <div><strong>235</strong><span>course choices</span></div>
-                    <div><strong>296</strong><span>institutions</span></div>
-                    <div><strong>36</strong><span>Indian states &amp; UTs</span></div>
+                    <div><strong>{{ course_count }}</strong><span>course choices</span></div>
+                    <div><strong>{{ institution_count }}</strong><span>institutions</span></div>
+                    <div><strong>{{ indian_location_count }}</strong><span>Indian states &amp; UTs</span></div>
                 </div>
             </div>
             <div class="col-lg-5">
