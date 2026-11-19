@@ -42,7 +42,8 @@ class CareerCompassTests(unittest.TestCase):
     def test_catalogue_minimums(self):
         indian = [college for college in COLLEGES if college["country"] == "India"]
         international = [college for college in COLLEGES if college["country"] != "India"]
-        self.assertGreaterEqual(len(indian), 150)
+        self.assertGreaterEqual(len(COLLEGES), 396)
+        self.assertGreaterEqual(len(indian), 307)
         self.assertGreaterEqual(len(international), 80)
         self.assertGreaterEqual(len(COURSE_CATALOG), 150)
         self.assertLessEqual(len(COURSE_CATALOG), 250)
@@ -78,7 +79,9 @@ class CareerCompassTests(unittest.TestCase):
         self.assertEqual(recommend(COLLEGES, preference), [])
         preference.update({"institution_type": "Private", "budget_amount": 400000,
                            "budget_currency": "INR", "budget_mode": "strict"})
-        self.assertEqual(recommend(COLLEGES, preference), [])
+        results = recommend(COLLEGES, preference)
+        self.assertGreaterEqual(len(results), 3)
+        self.assertTrue(all(item["budget_status"] == "Fees not verified" for item in results))
 
     def test_course_api_filters_by_category(self):
         data = self.client.get("/api/courses?category=Creative%20and%20Design").get_json()
@@ -144,19 +147,53 @@ class CareerCompassTests(unittest.TestCase):
         self.assertTrue(first["has_more"])
         self.assertFalse(first_slugs & second_slugs)
 
-    def test_strict_budget_uses_only_verified_fees(self):
-        preferences = {
-            "preferred_course": "Computer Science", "study_scope": "Abroad",
-            "preferred_country": "United States", "preferred_state": "Massachusetts",
-            "preferred_city": "Cambridge", "institution_type": "Either",
-            "budget_amount": 70000, "budget_currency": "USD", "budget_mode": "strict",
-        }
-        results = recommend(COLLEGES, preferences)
-        self.assertTrue(results)
-        self.assertTrue(all(item["budget_status"] == "Confirmed within budget" for item in results))
-        self.assertIn("Massachusetts Institute of Technology", {item["name"] for item in results})
-        preferences["budget_amount"] = 60000
-        self.assertNotIn("Massachusetts Institute of Technology", {item["name"] for item in recommend(COLLEGES, preferences)})
+    def test_budget_is_ranking_preference_not_exclusion(self):
+        sample = [
+            {"name": "Within", "slug": "within", "country": "India", "state": "X", "city": "Y", "ownership": "Private", "courses": ["Computer Science"], "career_fields": [], "annual_fee_amount": 100000, "fee_currency": "INR", "ranking_info": "", "rank_value": None},
+            {"name": "Above", "slug": "above", "country": "India", "state": "X", "city": "Y", "ownership": "Private", "courses": ["Computer Science"], "career_fields": [], "annual_fee_amount": 500000, "fee_currency": "INR", "ranking_info": "", "rank_value": None},
+            {"name": "Unknown", "slug": "unknown", "country": "India", "state": "X", "city": "Y", "ownership": "Private", "courses": ["Computer Science"], "career_fields": [], "annual_fee_amount": None, "fee_currency": None, "ranking_info": "", "rank_value": None},
+        ]
+        preferences = {"preferred_course": "Computer Science", "study_scope": "India", "preferred_country": "India", "preferred_state": "X", "preferred_city": "Y", "institution_type": "Private", "budget_amount": 200000, "budget_currency": "INR", "budget_mode": "strict"}
+        results = sort_results(recommend(sample, preferences))
+        self.assertEqual([item["name"] for item in results], ["Within", "Unknown", "Above"])
+        self.assertEqual({item["budget_status"] for item in results}, {"Confirmed within budget", "Fees not verified", "Verified fee is above budget"})
+
+    def test_visakhapatnam_engineering_coverage_and_alias(self):
+        data = self.search("B.Tech CSE", "India", "India", "Andhra Pradesh", "Visakhapatnam")
+        self.assertGreaterEqual(data["exact_count"], 6)
+        self.assertTrue(all(item["city"] == "Visakhapatnam" for item in data["results"]))
+        created = self.client.post("/api/chat/conversations", json={}).get_json()
+        answer = self.client.post(
+            f"/api/chat/conversations/{created['id']}/messages",
+            json={"message": "Show B.Tech CSE colleges in Vizag"},
+        ).get_json()
+        self.assertIn("Visakhapatnam", answer["content"])
+        follow_up = self.client.post(
+            f"/api/chat/conversations/{created['id']}/messages",
+            json={"message": "Now show only private colleges"},
+        ).get_json()
+        self.assertIn("Visakhapatnam", follow_up["content"])
+        self.assertNotIn("Andhra University College of Engineering", follow_up["content"])
+
+    def test_nationwide_state_searches_do_not_leak(self):
+        cases = [
+            ("Engineering", "Bihar", "Patna"),
+            ("Computer Science", "Mizoram", "Aizawl"),
+            ("Life Sciences", "Tripura", "Agartala"),
+            ("Engineering", "Chhattisgarh", "Bilaspur"),
+            ("Computer Science", "Ladakh", "Leh"),
+        ]
+        for course, state, city in cases:
+            with self.subTest(state=state, city=city):
+                data = self.search(course, "India", "India", state, city)
+                self.assertGreater(data["exact_count"], 0)
+                self.assertTrue(all(item["state"] == state and item["city"] == city for item in data["results"]))
+
+    def test_city_api_includes_extension_locations(self):
+        data = self.client.get("/api/locations/cities?country=India&subdivision=Andhra%20Pradesh").get_json()
+        self.assertIn("Visakhapatnam", data["cities"])
+        data = self.client.get("/api/locations/cities?country=India&subdivision=Maharashtra").get_json()
+        self.assertIn("Chhatrapati Sambhajinagar", data["cities"])
 
     def test_original_quiz_still_works(self):
         data = {"name": "Automated Student", "email": ""}
